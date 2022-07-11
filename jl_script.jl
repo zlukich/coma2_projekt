@@ -4,6 +4,12 @@ using QPDAS
 using LinearAlgebra
 
 
+# Funktion read_datei bekommt Weg zum Datei im System
+# Datei in solchen Format angegeben
+#    input: path to the file with rows {xi1}  {xi2} {yi}
+# Funktion liest Datei, und gibt Antwort im Form
+#    output:Array([xi1,xi2],yi)
+
 function read_datei(filename)
     x = []
     y = []
@@ -18,10 +24,18 @@ function read_datei(filename)
     return (x,y)
 end
 
+# Berechnung vom Skalarprodukt von 2 Elementigen Vektoren
+# Es wird bei der Matrix Berechnung benutzt
+#   input: x1, 2-Vektor
+#          x2, 2-Vektor
+#    output: double, Ergebnis von skalarprodukt
 function skalar_produkt(x1,x2)
     return x1[1]*x2[1]+x1[2]*x2[2]
 end
 
+# Berechnung von Matrix M = yi*yj*<xi*xj>, die im Qudratisches Programm benutzt wird
+# input: Array([xi1,xi2],yi), aus read_datei
+# output: k*k Matrix, wo k Anzahl von Biespielen
 function matrix_berechnung(array)
     matrix = zeros(length(array[1]),length(array[1]))
     for i=1:length(array[1])
@@ -32,6 +46,17 @@ function matrix_berechnung(array)
     return matrix
 end
 
+### Creating a variables for Quadratic program
+# P = M
+# z = 1, vector
+# b = 0 
+# c = -I, Einheitsmatrix
+# d = 0, vector
+# A Matrix bei Diagonalelementen hat spalte y aus Beispiel
+
+# calculate_write_w_b - Sammlung von obigen Funktionen, um Datei zu lesen und Werte zu speicher
+#                       + bereitstellung von Quadratischen Programm und Loesung fuer w und b
+#                       + schreiben von w und b als Ausgabe im Datei mit dem Name "Beispiel{i}_vektor.txt"
 function calculate_write_w_b(filename)
     content = read_datei(filename)
     M = matrix_berechnung(content)
@@ -49,11 +74,7 @@ function calculate_write_w_b(filename)
     #print("Vektor b",b)
     C = zeros(Int64(sqrt(length(M))),Int64(sqrt(length(M))))
     for i=1:Int64(sqrt(length(M)))
-        for j = 1:Int64(sqrt(length(M)))
-            if(i == j)
-                C[i,j] = -1
-            end
-        end
+        C[i,i] = -1
     end
     #print("Matrix C",C)
     A = zeros(Int64(sqrt(length(M))))#,Int64(sqrt(length(M))))
@@ -75,7 +96,8 @@ function calculate_write_w_b(filename)
     
 
     P_my  
-    P_my = P_my+0.5^12*I
+    
+    P_my = P_my+1/1000*I 
 
     qp = QuadraticProgram(A, b, C, d, z_my, P_my)
     sol,val = solve!(qp)
